@@ -65,6 +65,9 @@ mod bst {
         }
 
         pub fn contains(&self, data: T) -> bool {
+            if self.root.is_none() {
+                return false;
+            }
             Tree::<T>::contains_rec(&self.root, data)
         }
 
