@@ -101,7 +101,6 @@ mod bst {
                 Tree::<T>::print_rec(&cur_node.as_ref().unwrap().left);
             }
         }
-
     }
 }
 
