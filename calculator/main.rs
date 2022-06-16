@@ -107,12 +107,12 @@ fn parse_equation(passed_eq: &str, silent: bool) -> f64 {
 
     if passed_eq.trim() == "quit" {
         println!("quiting...");
-        return 0.0;
+        return -0.0;
     }
 
     if !check_paren_count(passed_eq) {
         println!("ERR: unbalanced parenthesis.");
-        return 0.0;
+        return -0.0;
     }
 
     let mut cur_num = String::new();
@@ -124,6 +124,7 @@ fn parse_equation(passed_eq: &str, silent: bool) -> f64 {
         println!("Parsing: {}", passed_eq);
     }
 
+    // Loop through the passed_eq.
     for c in passed_eq.chars() {
         if c == ')' {
             paren_count -= 1;
