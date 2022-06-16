@@ -1,21 +1,41 @@
 use std::io::{ stdin };
 
 /* TODO:
-    1. Implement graphing and checking points.
+    1. Implement graphing and checking points. DONE.
     2. sqrt().
     3. sqr().
     4. e.
     5. log & ln.
  */
 
-#[allow(dead_code)]
 struct Point {
     x: f64,
     y: f64,
 }
 
-fn perform_arithmetic(x: f64, op: char, y: f64) -> f64 {
-    println!("Performing: {} {} {}", x, op, y);
+struct GraphInput {
+    y: String,
+    amt: i32,
+}
+
+
+impl Point {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x, y, }
+    }
+}
+
+impl GraphInput {
+    pub fn new(y: String, amt: i32) -> Self {
+        Self { y, amt, }
+    }
+}
+
+fn perform_arithmetic(x: f64, op: char, y: f64, silent: bool) -> f64 {
+    if !silent {
+        println!("Performing: {} {} {}", x, op, y);
+    }
+
     match op {
         '+' => x+y,
         '-' => x-y,
@@ -30,7 +50,7 @@ fn is_sym(c: char) -> bool {
 }
 
 // Give this function a vec of nums and symbols and it will spit out the resulting math.
-fn evaluate(nums: &mut Vec<f64>, syms: &mut Vec<char>) -> f64 {
+fn evaluate(nums: &mut Vec<f64>, syms: &mut Vec<char>, silent: bool) -> f64 {
 
     let mut total = 0.0;
 
@@ -40,8 +60,7 @@ fn evaluate(nums: &mut Vec<f64>, syms: &mut Vec<char>) -> f64 {
         should_loop = false;
         for i in 0..syms.len() {
             if syms[i] == '*' || syms[i] == '/' {
-                nums[i] = perform_arithmetic(nums[i], syms[i], nums[i+1]);
-                // println!("Done: {}", nums[i]);
+                nums[i] = perform_arithmetic(nums[i], syms[i], nums[i+1], silent);
                 nums.remove(i+1);
                 syms.remove(i);
                 should_loop = true;
@@ -54,11 +73,14 @@ fn evaluate(nums: &mut Vec<f64>, syms: &mut Vec<char>) -> f64 {
     if nums.len() > 0 {
         total = nums[0];
     }
-
-    println!("Built: {:?} {:?}", nums, syms);
+    if !silent {
+        println!("Built: {:?} {:?}", nums, syms);
+    }
     for (i, s) in syms.iter().enumerate() {
-        total = perform_arithmetic(total, *s, nums[i+1]);
-        println!("Done: {}", total);
+        total = perform_arithmetic(total, *s, nums[i+1], silent);
+        if !silent {
+            println!("Done: {}", total);
+        }
     }
 
     total
@@ -81,7 +103,7 @@ fn check_paren_count(passed_eq: &str) -> bool {
 }
 
 // Build vecs of nums and symbols.
-fn parse_equation(passed_eq: &str) -> f64 {
+fn parse_equation(passed_eq: &str, silent: bool) -> f64 {
 
     if passed_eq.trim() == "quit" {
         println!("quiting...");
@@ -98,7 +120,10 @@ fn parse_equation(passed_eq: &str) -> f64 {
     let mut parsed_syms = Vec::<char>::new();
     let mut paren_count: usize = 0;
 
-    println!("Parsing: {}", passed_eq);
+    if !silent {
+        println!("Parsing: {}", passed_eq);
+    }
+
     for c in passed_eq.chars() {
         if c == ')' {
             paren_count -= 1;
@@ -106,7 +131,7 @@ fn parse_equation(passed_eq: &str) -> f64 {
                 0 => {
                     match cur_num.len() {
                         0 => cur_num = "0".to_string(),
-                        _ => cur_num = parse_equation(&cur_num.to_string()).to_string(),
+                        _ => cur_num = parse_equation(&cur_num.to_string(), silent).to_string(),
                     }
                 }
                 _ => cur_num.push(c),
@@ -145,41 +170,89 @@ fn parse_equation(passed_eq: &str) -> f64 {
     }
 
     // Return the evaluation of what was parsed.
-    evaluate(&mut parsed_nums, &mut parsed_syms)
+    evaluate(&mut parsed_nums, &mut parsed_syms, silent)
 }
 
-#[allow(unused_imports)]
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test1() {
-        unimplemented!()
+fn create_graph(passed_function: &str, sz: i32, silent: bool) -> Vec<Point> {
+    let mut graph_points = Vec::<Point>::new();
+    let mut new_function = String::new();
+    let mut tmp: String;
+
+    for i in -sz..sz {
+        for c in passed_function.chars() {
+            if c.is_alphabetic() {
+                if i < 0 {
+                    new_function.push('(');
+                    tmp = i.to_string();
+                    for c2 in tmp.chars() {
+                        new_function.push(c2);
+                    }
+                    new_function.push(')');
+                }
+                else {
+                    tmp = i.to_string();
+                    for c2 in tmp.chars() {
+                        new_function.push(c2);
+                    }
+                }
+            }
+            else {
+                new_function.push(c);
+            }
+        }
+        graph_points.push(Point::new(i as f64, parse_equation(&new_function, silent)));
+        new_function.clear();
     }
+
+    graph_points
 }
 
 fn main() {
+
     let mut buffer = String::new();
     let mut history = Vec::<f64>::new();
-    println!("Type: `quit` to quit the program.");
+    let mut graph_input = GraphInput::new("".to_string(), 0);
+    let args: String = std::env::args().collect();
+
+    let silent: bool = if args.trim() == "playground-s" { true } else { false };
+    println!("{}", args.trim());
+
+    println!("\n\nType: `quit` to quit the program.");
+    println!("Type: `graph` to print `n` number of points on a graph.");
+    println!("To enable silent mode, re-run with `-s`");
+    println!("Silent mode enabled? [{}]", silent);
     while buffer.trim() != "quit" {
-        if buffer.trim() == "graph" {
-            // TODO: implement graphing.
-            unimplemented!()
-        }
         buffer.clear();
         stdin().read_line(&mut buffer).expect("Failed to read into buffer.");
-        println!("|\nV\n--------------------------------");
-        history.push(parse_equation(&buffer));
-        if history.len() > 0 {
-            print!("\nHistory: [ ");
-            for i in &history {
-                print!("{} ", i);
+
+        if buffer.trim() == "graph" {
+            println!("f(x) = ? ");
+            stdin().read_line(&mut graph_input.y).expect("Failed to read into buffer.");
+            println!("Number of vertices to generate [x]: ");
+            buffer.clear();
+            stdin().read_line(&mut buffer).expect("Failed to read into buffer.");
+            graph_input.amt = buffer.trim().parse::<i32>().unwrap();
+            println!("Graphing...");
+            println!("|\nV\n--------------------------------");
+            for graph in create_graph(&graph_input.y, graph_input.amt, silent) {
+                println!("x: [{}] y:[{}]", graph.x, graph.y);
             }
-            print!("]\n");
+            println!("--------------------------------\n");
+            graph_input.y.clear();
         }
-        println!("\nResult -> {}\n", history[history.len()-1]);
-        println!("--------------------------------\n");
+        else {
+            println!("|\nV\n--------------------------------");
+            history.push(parse_equation(&buffer, silent));
+            if history.len() > 0 {
+                print!("\nHistory: [ ");
+                for i in &history {
+                    print!("{} ", i);
+                }
+                print!("]\n");
+            }
+            println!("\nResult -> {}\n", history[history.len()-1]);
+            println!("--------------------------------\n");
+        }
     }
 }
 
