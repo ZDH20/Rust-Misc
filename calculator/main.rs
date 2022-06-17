@@ -289,7 +289,7 @@ fn get_graph_info(graphvis: bool) -> GraphInput {
     buffer.clear();
 
     if !graphvis {
-        println!("x = ?");
+        println!("Amount to test?");
         stdin().read_line(&mut buffer).expect("Failed to read into buffer.");
         graph_input.amt = buffer.trim().parse::<i32>().unwrap();
     }
