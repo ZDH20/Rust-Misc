@@ -313,12 +313,11 @@ fn print_begin_info(verbose: bool) {
 }
 
 fn main() {
+    let mut graph_input: GraphInput;
     let mut buffer      = String::new();
     let mut history     = Vec::<f64>::new();
-    let mut graph_input: GraphInput;
     let args: String    = std::env::args().collect();
-    let verbose: bool =
-        if args.trim() == "./graphing-v" { true } else { false };
+    let verbose: bool   = if args.trim() == "./graphing-v" { true } else { false };
 
     print_begin_info(verbose);
 
