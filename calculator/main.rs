@@ -41,7 +41,7 @@ impl GraphInput {
 
 // Depending on the operator, it will perform appropriate arithmetic.
 fn perform_arithmetic(x: f64, op: char, y: f64, exp: Option<i32>, verbose: bool) -> f64 {
-    if !verbose {
+    if verbose {
         println!("Performing: {} {} {}", x, op, y);
     }
 
